@@ -1,0 +1,611 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Yasiru Gems Orders</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Marcellus&family=Figtree:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+/* ================================================================
+   SETUP: Website eka palaweni para open kalama setup screen eka
+   enawa. Eken labena "const CONFIG = ..." line eka me line eka
+   wenuwata paste karanna.
+   ================================================================ */
+const CONFIG = null;
+
+/* ================================================================
+   INVOICE CONTACT DETAILS: Invoice eke pahalin pennana visthara.
+   Hiswa thibbot e line eka invoice eke pennanne naha.
+   ================================================================ */
+const SHOP = {
+  address:  "No. 337/3, Agalawaththa Road, Weththewa, Mathugama",
+  phones:   ["+94 71 280 2569", "071 323 4239"],
+  whatsapp: "+94 71 280 2569",
+  email:    "ceo@yasirugunasinghe.space",
+  website:  "Yasirugemsjewellry.com",
+  facebook: "https://www.facebook.com/profile.php?id=61566966630931",
+  fbGroup:  ""
+};
+</script>
+<style>
+/* White, black and gold — black header band, white ledger, gold detailing */
+:root{
+  --bg:#ffffff; --surface:#ffffff; --surface-2:#f6f4ee; --line:#e4dfd2;
+  --ink:#111111; --muted:#6b675e;
+  --black:#0d0d0d; --on-black:#f5efe0;
+  --gold:#b8923a; --gold-deep:#8f6e24; --gold-soft:#f3ead3;
+  --pending-bg:#f3ead3; --pending-fg:#7a5a14;
+  --done-bg:#111111; --done-fg:#e3c77d;
+  --danger:#a8231b; --danger-bg:#fbe7e5;
+  --ok:#1f6b3a; --ok-bg:#e3f2e8;
+  --f-display:"Marcellus",Georgia,"Times New Roman",serif;
+  --f-body:"Figtree",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.5}
+.wrap{max-width:1100px;margin:0 auto;padding-left:16px;padding-right:16px}
+h1,h2,h3{font-family:var(--f-display);font-weight:400;margin:0;text-wrap:balance}
+.mono{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.label{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:600}
+button,input,select,textarea{font:inherit;color:inherit}
+.btn{border:1px solid var(--line);background:var(--surface);padding:9px 16px;border-radius:6px;cursor:pointer;font-weight:600;display:inline-flex;align-items:center;justify-content:center;gap:8px}
+.btn:hover{border-color:var(--gold)}
+.btn.primary{background:var(--black);color:var(--on-black);border-color:var(--black)}
+.btn.primary:hover{background:#262626;border-color:var(--gold)}
+.btn.gold{background:var(--gold);color:#111;border-color:var(--gold)}
+.btn.gold:hover{background:var(--gold-deep);color:#fff}
+.btn.danger{color:var(--danger);border-color:var(--danger)}
+.btn.small{padding:6px 11px;font-size:13px}
+.btn:disabled{opacity:.55;cursor:wait}
+:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+input,select,textarea{width:100%;background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:10px 12px}
+input:focus,select:focus,textarea:focus{border-color:var(--gold);outline:none;box-shadow:0 0 0 3px var(--gold-soft)}
+.field{display:flex;flex-direction:column;gap:6px;min-width:0}
+.field label{font-size:13px;font-weight:600;color:var(--muted)}
+
+.login{min-height:100vh;display:grid;place-items:center;padding:32px 16px;background:var(--black)}
+.login-card{width:100%;max-width:400px;background:var(--surface);border-top:4px solid var(--gold);border-radius:10px;padding:32px 28px;display:flex;flex-direction:column;gap:18px}
+.login-card.wide{max-width:620px}
+.brand-mark{display:flex;align-items:center;gap:12px}
+.gem{width:38px;height:38px;flex:none;color:var(--gold)}
+.login-card h1{font-size:28px;line-height:1.1}
+.sub{color:var(--muted);font-size:14px;margin:0}
+.err{color:var(--danger);background:var(--danger-bg);padding:8px 12px;border-radius:6px;font-size:14px}
+.okmsg{color:var(--ok);background:var(--ok-bg);padding:8px 12px;border-radius:6px;font-size:14px}
+textarea.out{font-family:var(--f-mono);font-size:12px;min-height:150px;word-break:break-all}
+fieldset{border:1px solid var(--line);border-radius:8px;padding:14px;margin:0;display:flex;flex-direction:column;gap:12px}
+legend{padding:0 6px;font-weight:700;color:var(--gold-deep);font-size:13px;letter-spacing:.06em;text-transform:uppercase}
+
+header.top{background:var(--black);color:var(--on-black);border-bottom:3px solid var(--gold);position:sticky;top:0;z-index:5}
+header.top .wrap{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-block:14px;flex-wrap:wrap}
+header.top h1{font-size:22px;color:#fff}
+header.top .who{font-size:13px;color:var(--gold)}
+header.top .btn{background:transparent;color:var(--on-black);border-color:var(--gold)}
+main{padding-block:24px 48px;display:flex;flex-direction:column;gap:22px}
+
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.stat{background:var(--surface-2);border:1px solid var(--line);border-radius:8px;padding:14px 16px;display:flex;flex-direction:column;gap:2px}
+.stat b{font-family:var(--f-display);font-size:30px;font-weight:400;font-variant-numeric:tabular-nums}
+.stat:first-child{background:var(--black);border-color:var(--black)}
+.stat:first-child .label{color:var(--gold)}
+.stat:first-child b{color:#fff}
+
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.toolbar input{flex:1 1 220px;width:auto}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.seg button{border:0;background:transparent;padding:8px 12px;cursor:pointer;font-weight:600;font-size:13px;color:var(--muted)}
+.seg button[aria-pressed="true"]{background:var(--black);color:var(--gold)}
+
+.register{border:1px solid var(--line);border-radius:8px;overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:720px}
+th,td{text-align:left;padding:12px 14px;border-bottom:1px solid var(--line);vertical-align:middle}
+th{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--gold-deep);font-weight:700;background:var(--surface-2)}
+tr:last-child td{border-bottom:0}
+td.actions{white-space:nowrap;text-align:right}
+td.actions .btn{margin-left:4px}
+.pill{display:inline-block;padding:3px 10px;border-radius:999px;font-size:12px;font-weight:700;letter-spacing:.03em;border:0}
+.pill.pending{background:var(--pending-bg);color:var(--pending-fg)}
+.pill.delivered{background:var(--done-bg);color:var(--done-fg)}
+button.pill{cursor:pointer}
+.empty{padding:40px 20px;text-align:center;color:var(--muted);display:flex;flex-direction:column;gap:10px;align-items:center}
+.empty h3{color:var(--ink);font-size:20px}
+
+.scrim{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:20;display:flex;justify-content:flex-end}
+.drawer{width:100%;max-width:520px;height:100%;background:var(--surface);border-left:3px solid var(--gold);overflow-y:auto;padding:24px 20px 32px;display:flex;flex-direction:column;gap:16px}
+.drawer h2{font-size:24px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.form-actions{display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap;padding-top:8px}
+
+.lookup{max-width:640px;width:100%;margin:0 auto;display:flex;flex-direction:column;gap:18px}
+.lookup form{display:flex;gap:10px}
+.lookup form input{flex:1}
+.order-card{border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.order-card .head{padding:18px 20px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;background:var(--black);color:#fff}
+.order-card .head .label{color:var(--gold)}
+.order-card .head h2{font-size:24px}
+dl.kv{display:grid;grid-template-columns:minmax(120px,180px) 1fr;margin:0}
+dl.kv dt,dl.kv dd{padding:11px 20px;border-bottom:1px solid var(--line);margin:0}
+dl.kv dt{color:var(--muted);font-size:13px;font-weight:600;background:var(--surface-2)}
+dl.kv dd{min-width:0;overflow-wrap:anywhere}
+.order-card .foot{padding:16px 20px;display:flex;justify-content:flex-end;gap:10px;flex-wrap:wrap}
+
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:20px;background:var(--black);color:var(--gold);border:1px solid var(--gold);padding:10px 18px;border-radius:6px;z-index:40;font-weight:600;font-size:14px;max-width:calc(100% - 32px)}
+[hidden]{display:none!important}
+.confirm{background:var(--danger-bg);border-radius:8px;padding:14px;display:flex;flex-direction:column;gap:10px}
+.note{font-size:13px;color:var(--muted)}
+@media (max-width:640px){
+  .stat b{font-size:24px}
+  .grid2{grid-template-columns:1fr}
+  dl.kv{grid-template-columns:1fr}
+  dl.kv dt{border-bottom:0;padding-bottom:4px}
+  .lookup form{flex-direction:column}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="toast" class="toast" hidden></div>
+
+<script>
+const $ = s => document.querySelector(s);
+const app = $("#app");
+let orders = [], session = null;
+let filter = { q: "", status: "all" };
+
+const gemSVG = `<svg class="gem" viewBox="0 0 40 40" aria-hidden="true"><polygon points="20,3 36,15 20,37 4,15" fill="none" stroke="currentColor" stroke-width="2"/><polyline points="4,15 36,15" fill="none" stroke="currentColor" stroke-width="2"/><polyline points="13,15 20,37 27,15 20,3 13,15" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>`;
+
+function esc(s){return String(s ?? "").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+function idFor(bill){return "b_" + String(bill).trim().toUpperCase().replace(/[^A-Z0-9_-]/g,"_")}
+function money(n){const v=Number(n); return (n!==""&&n!=null&&isFinite(v)) ? "Rs. "+v.toLocaleString("en-LK",{minimumFractionDigits:2,maximumFractionDigits:2}) : "—"}
+function fmtDate(d){if(!d) return "—"; const x=new Date(d+"T00:00:00"); return isNaN(x)?d:x.toLocaleDateString("en-GB",{day:"2-digit",month:"short",year:"numeric"})}
+function today(){const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
+function toast(msg){const t=$("#toast");t.textContent=msg;t.hidden=false;clearTimeout(toast.h);toast.h=setTimeout(()=>t.hidden=true,2800)}
+function pill(s){return `<span class="pill ${s==="Delivered"?"delivered":"pending"}">${s==="Delivered"?"Delivered":"Pending"}</span>`}
+function sortOrders(){orders.sort((a,b)=>(b.issueDate||"").localeCompare(a.issueDate||"")||String(b.billNo).localeCompare(String(a.billNo),undefined,{numeric:true}))}
+
+/* ---------- text / crypto helpers ---------- */
+const te=new TextEncoder(), td=new TextDecoder();
+function bytesToB64(bytes){let bin="";const u=new Uint8Array(bytes);for(let i=0;i<u.length;i++)bin+=String.fromCharCode(u[i]);return btoa(bin)}
+function b64ToBytes(b64){const bin=atob(String(b64).replace(/\s/g,""));const u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);return u}
+const utf8ToB64=s=>bytesToB64(te.encode(s));
+const b64ToUtf8=b=>td.decode(b64ToBytes(b));
+
+async function deriveKey(pass,salt){
+  const base=await crypto.subtle.importKey("raw",te.encode(pass),"PBKDF2",false,["deriveKey"]);
+  return crypto.subtle.deriveKey({name:"PBKDF2",salt,iterations:310000,hash:"SHA-256"},base,{name:"AES-GCM",length:256},false,["encrypt","decrypt"]);
+}
+async function sealToken(token,pass){
+  const salt=crypto.getRandomValues(new Uint8Array(16)), iv=crypto.getRandomValues(new Uint8Array(12));
+  const key=await deriveKey(pass,salt);
+  const ct=await crypto.subtle.encrypt({name:"AES-GCM",iv},key,te.encode(token));
+  return {salt:bytesToB64(salt),iv:bytesToB64(iv),ct:bytesToB64(ct)};
+}
+async function openToken(sealed,pass){
+  const key=await deriveKey(pass,b64ToBytes(sealed.salt));
+  const pt=await crypto.subtle.decrypt({name:"AES-GCM",iv:b64ToBytes(sealed.iv)},key,b64ToBytes(sealed.ct));
+  return td.decode(pt);
+}
+
+/* ---------- GitHub storage ---------- */
+function apiUrl(c){return `https://api.github.com/repos/${encodeURIComponent(c.owner)}/${encodeURIComponent(c.repo)}/contents/${c.path}`}
+function ghHeaders(token){return {"Authorization":"Bearer "+token,"Accept":"application/vnd.github+json","X-GitHub-Api-Version":"2022-11-28"}}
+function ghError(status){
+  if(status===401) return "The GitHub access key is wrong or has expired. Open the site with ?setup at the end and make new keys.";
+  if(status===403) return "GitHub refused this action. The access key may not have permission, or the hourly limit was reached.";
+  if(status===404) return "The data repository or orders.json file was not found. Check the setup.";
+  return "GitHub error ("+status+"). Check your internet and try again.";
+}
+async function ghLoad(c,token){
+  const r=await fetch(apiUrl(c)+"?ref="+encodeURIComponent(c.branch||"main")+"&t="+Date.now(),{headers:ghHeaders(token),cache:"no-store"});
+  if(!r.ok){const e=new Error(ghError(r.status));e.status=r.status;throw e}
+  const j=await r.json();
+  let list=[]; try{list=JSON.parse(b64ToUtf8(j.content)||"[]")}catch(e){list=[]}
+  return {list:Array.isArray(list)?list:[],sha:j.sha};
+}
+async function ghSave(c,token,list,sha,message){
+  const body={message,content:utf8ToB64(JSON.stringify(list,null,2)),branch:c.branch||"main"};
+  if(sha) body.sha=sha;
+  const r=await fetch(apiUrl(c),{method:"PUT",headers:{...ghHeaders(token),"Content-Type":"application/json"},body:JSON.stringify(body)});
+  if(!r.ok){const e=new Error(ghError(r.status));e.status=r.status;throw e}
+  return (await r.json()).content.sha;
+}
+/* load latest, change, save — retries once if someone saved in between */
+async function mutate(fn,message){
+  for(let attempt=0;attempt<2;attempt++){
+    const {list,sha}=await ghLoad(CONFIG,session.token);
+    const next=fn(list);
+    if(next===false) return list;
+    try{await ghSave(CONFIG,session.token,next,sha,message);orders=next;sortOrders();return next}
+    catch(e){ if((e.status===409||e.status===422)&&attempt===0) continue; throw e }
+  }
+}
+
+/* ---------- boot ---------- */
+const wantSetup=new URLSearchParams(location.search).has("setup");
+if(!window.crypto||!crypto.subtle){
+  app.innerHTML=`<div class="login"><div class="login-card"><h1>Open over https</h1><p class="sub">This system needs a secure (https) address, such as your github.io link.</p></div></div>`;
+} else if(!CONFIG||wantSetup){ renderSetup() }
+else {
+  try{const s=JSON.parse(sessionStorage.getItem("yg_session")||"null");if(s&&CONFIG.users[s.user])session=s}catch(e){}
+  session?enter():renderLogin();
+}
+
+/* ---------- setup ---------- */
+function renderSetup(){
+  const host=location.hostname.endsWith("github.io")?location.hostname.split(".")[0]:"";
+  app.innerHTML=`<div class="login"><form class="login-card wide" id="sf" autocomplete="off">
+    <div class="brand-mark">${gemSVG}<div><h1>One-time setup</h1><div class="label">Yasiru Gems Order Register</div></div></div>
+    <p class="sub">Fill these in once. The access keys are locked with each person's password, so the file you publish never shows them.</p>
+    <fieldset><legend>Data repository</legend>
+      <div class="grid2">
+        <div class="field"><label for="sOwner">GitHub username</label><input id="sOwner" required value="${esc(host)}"></div>
+        <div class="field"><label for="sRepo">Private data repository</label><input id="sRepo" required value="orders-data"></div>
+      </div>
+    </fieldset>
+    <fieldset><legend>Host</legend>
+      <div class="grid2">
+        <div class="field"><label for="sHU">User name</label><input id="sHU" required value="Yasirugems"></div>
+        <div class="field"><label for="sHP">Password</label><input id="sHP" required value="Ya23@runp"></div>
+      </div>
+      <div class="field"><label for="sHT">Access key (read and write)</label><input id="sHT" class="mono" required placeholder="github_pat_..."></div>
+    </fieldset>
+    <fieldset><legend>Look 1</legend>
+      <div class="grid2">
+        <div class="field"><label for="sVU">User name</label><input id="sVU" required value="Ruwan"></div>
+        <div class="field"><label for="sVP">Password</label><input id="sVP" required value="Ya23runp"></div>
+      </div>
+      <div class="field"><label for="sVT">Access key (read-only)</label><input id="sVT" class="mono" required placeholder="github_pat_..."></div>
+    </fieldset>
+    <div id="sMsg"></div>
+    <button class="btn primary" type="submit" id="sBtn">Check keys and make setup code</button>
+    <div id="sOut" hidden class="field">
+      <label for="sCode">Setup code — copy this and replace the line <b>const CONFIG = null;</b> in index.html</label>
+      <textarea id="sCode" class="out" readonly></textarea>
+      <button type="button" class="btn gold" id="sCopy">Copy setup code</button>
+    </div>
+  </form></div>`;
+  $("#sf").addEventListener("submit",async e=>{
+    e.preventDefault();
+    const msg=$("#sMsg"), btn=$("#sBtn");
+    const c={owner:$("#sOwner").value.trim(),repo:$("#sRepo").value.trim(),path:"orders.json",branch:"main"};
+    const hT=$("#sHT").value.trim(), vT=$("#sVT").value.trim();
+    btn.disabled=true; btn.textContent="Checking with GitHub…"; msg.innerHTML="";
+    try{
+      // host key: read, and create orders.json if missing
+      let r=await fetch(apiUrl(c)+"?t="+Date.now(),{headers:ghHeaders(hT),cache:"no-store"});
+      if(r.status===404){
+        const rr=await fetch(`https://api.github.com/repos/${encodeURIComponent(c.owner)}/${encodeURIComponent(c.repo)}`,{headers:ghHeaders(hT)});
+        if(!rr.ok) throw new Error("Host key: "+ghError(rr.status));
+        const repoInfo=await rr.json(); c.branch=repoInfo.default_branch||"main";
+        await ghSave(c,hT,[],null,"Create orders.json");
+      } else if(!r.ok) throw new Error("Host key: "+ghError(r.status));
+      else { const rr=await fetch(`https://api.github.com/repos/${encodeURIComponent(c.owner)}/${encodeURIComponent(c.repo)}`,{headers:ghHeaders(hT)}); if(rr.ok){c.branch=(await rr.json()).default_branch||"main"} }
+      // viewer key: read only
+      r=await fetch(apiUrl(c)+"?t="+Date.now(),{headers:ghHeaders(vT),cache:"no-store"});
+      if(!r.ok) throw new Error("Look 1 key: "+ghError(r.status));
+      btn.textContent="Locking keys…";
+      const users={};
+      users[$("#sHU").value.trim()]={role:"host",label:"Host",...await sealToken(hT,$("#sHP").value)};
+      users[$("#sVU").value.trim()]={role:"viewer",label:"Look 1",...await sealToken(vT,$("#sVP").value)};
+      const cfg={owner:c.owner,repo:c.repo,path:c.path,branch:c.branch,users};
+      $("#sCode").value="const CONFIG = "+JSON.stringify(cfg)+";";
+      $("#sOut").hidden=false;
+      msg.innerHTML=`<div class="okmsg">Both keys work. Copy the setup code below and paste it into index.html.</div>`;
+    }catch(er){ msg.innerHTML=`<div class="err">${esc(er.message)}</div>` }
+    btn.disabled=false; btn.textContent="Check keys and make setup code";
+  });
+  $("#sCopy").onclick=async()=>{const t=$("#sCode");try{await navigator.clipboard.writeText(t.value);toast("Setup code copied")}catch(e){t.select();toast("Press Ctrl+C to copy")}};
+}
+
+/* ---------- login ---------- */
+function renderLogin(err){
+  app.innerHTML = `
+  <div class="login"><form class="login-card" id="loginForm" autocomplete="off">
+    <div class="brand-mark">${gemSVG}<div><h1>Yasiru Gems</h1><div class="label">Order Register</div></div></div>
+    <p class="sub">Sign in to manage or check jewellery orders.</p>
+    ${err?`<div class="err">${esc(err)}</div>`:""}
+    <div class="field"><label for="lu">User name</label><input id="lu" required autocapitalize="off"></div>
+    <div class="field"><label for="lp">Password</label><input id="lp" type="password" required></div>
+    <button class="btn primary" type="submit" id="lbtn">Sign in</button>
+  </form></div>`;
+  $("#loginForm").addEventListener("submit",async e=>{
+    e.preventDefault();
+    const u=$("#lu").value.trim(), p=$("#lp").value;
+    const key=Object.keys(CONFIG.users).find(k=>k.toLowerCase()===u.toLowerCase());
+    if(!key){renderLogin("User name or password is wrong. Check and try again.");return}
+    $("#lbtn").disabled=true; $("#lbtn").textContent="Signing in…";
+    let token;
+    try{ token=await openToken(CONFIG.users[key],p) }
+    catch(er){ renderLogin("User name or password is wrong. Check and try again."); return }
+    session={user:key,role:CONFIG.users[key].role,label:CONFIG.users[key].label,token};
+    try{sessionStorage.setItem("yg_session",JSON.stringify(session))}catch(er){}
+    enter();
+  });
+}
+function logout(){session=null;orders=[];try{sessionStorage.removeItem("yg_session")}catch(e){} renderLogin()}
+function enter(){ if(session.role==="host"){renderHost();refresh()} else renderViewer() }
+
+/* ---------- host ---------- */
+function headerHTML(){
+  return `<header class="top"><div class="wrap">
+    <div class="brand-mark">${gemSVG}<div><h1>Yasiru Gems &amp; Jewellery</h1><div class="who">${esc(session.label)} · ${esc(session.user)}</div></div></div>
+    <button class="btn small" id="logout">Sign out</button></div></header>`;
+}
+async function refresh(){
+  try{const {list}=await ghLoad(CONFIG,session.token);orders=list;sortOrders();renderTable()}
+  catch(e){const reg=$("#register");if(reg)reg.innerHTML=`<div class="empty"><h3>Could not load orders</h3><p>${esc(e.message)}</p><button class="btn" id="retry">Try again</button></div>`;const r=$("#retry");if(r)r.onclick=refresh}
+}
+
+function renderHost(){
+  app.innerHTML = headerHTML() + `
+  <main class="wrap">
+    <section class="stats" aria-label="Summary">
+      <div class="stat"><span class="label">All orders</span><b id="sAll">0</b></div>
+      <div class="stat"><span class="label">Pending</span><b id="sPen">0</b></div>
+      <div class="stat"><span class="label">Delivered</span><b id="sDel">0</b></div>
+    </section>
+    <div class="toolbar">
+      <input id="q" type="search" placeholder="Search bill no, client name or item" value="${esc(filter.q)}">
+      <div class="seg" role="group" aria-label="Status filter">
+        <button data-f="all">All</button><button data-f="Pending">Pending</button><button data-f="Delivered">Delivered</button>
+      </div>
+      <button class="btn small" id="refBtn" title="Load latest orders">Refresh</button>
+      <button class="btn gold" id="addBtn">+ New order</button>
+    </div>
+    <div class="register" id="register"><div class="empty"><p>Loading orders…</p></div></div>
+  </main>`;
+  $("#logout").onclick=logout;
+  $("#addBtn").onclick=()=>openForm(null);
+  $("#refBtn").onclick=()=>{refresh();toast("Orders refreshed")};
+  $("#q").addEventListener("input",e=>{filter.q=e.target.value;renderTable()});
+  document.querySelectorAll(".seg button").forEach(b=>b.onclick=()=>{filter.status=b.dataset.f;renderTable()});
+}
+
+function renderTable(){
+  const reg=$("#register"); if(!reg) return;
+  $("#sAll").textContent=orders.length;
+  $("#sPen").textContent=orders.filter(o=>o.status!=="Delivered").length;
+  $("#sDel").textContent=orders.filter(o=>o.status==="Delivered").length;
+  document.querySelectorAll(".seg button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.f===filter.status)));
+  const q=filter.q.trim().toLowerCase();
+  const rows=orders.filter(o=>(filter.status==="all"||(o.status||"Pending")===filter.status)&&(!q||[o.billNo,o.name,o.item,o.phone].join(" ").toLowerCase().includes(q)));
+  if(!orders.length){
+    reg.innerHTML=`<div class="empty">${gemSVG}<h3>No orders yet</h3><p>Add the first order with its bill number, client name and item.</p><button class="btn gold" id="emptyAdd">+ New order</button></div>`;
+    $("#emptyAdd").onclick=()=>openForm(null); return;
+  }
+  if(!rows.length){reg.innerHTML=`<div class="empty"><h3>No matching orders</h3><p>Try another bill number or name, or change the status filter.</p></div>`;return}
+  reg.innerHTML=`<table><thead><tr><th>Bill no</th><th>Client</th><th>Item</th><th>Issue date</th><th>Amount</th><th>Status</th><th></th></tr></thead><tbody>
+  ${rows.map(o=>`<tr>
+    <td class="mono">${esc(o.billNo)}</td>
+    <td><div style="font-weight:600">${esc(o.name)}</div><div class="note">${esc(o.phone||"")}</div></td>
+    <td>${esc(o.item)}</td>
+    <td class="mono">${esc(fmtDate(o.issueDate))}</td>
+    <td class="mono">${esc(money(o.amount))}</td>
+    <td><button class="pill ${o.status==="Delivered"?"delivered":"pending"}" data-toggle="${esc(o.id)}" title="Click to change status">${o.status==="Delivered"?"Delivered":"Pending"}</button></td>
+    <td class="actions"><button class="btn small" data-inv="${esc(o.id)}">Invoice</button><button class="btn small" data-edit="${esc(o.id)}">Edit</button></td>
+  </tr>`).join("")}</tbody></table>`;
+  reg.querySelectorAll("[data-edit]").forEach(b=>b.onclick=()=>openForm(orders.find(o=>o.id===b.dataset.edit)));
+  reg.querySelectorAll("[data-inv]").forEach(b=>b.onclick=()=>downloadInvoice(orders.find(o=>o.id===b.dataset.inv)));
+  reg.querySelectorAll("[data-toggle]").forEach(b=>b.onclick=async()=>{
+    const o=orders.find(x=>x.id===b.dataset.toggle); if(!o) return;
+    const ns=o.status==="Delivered"?"Pending":"Delivered";
+    b.disabled=true;
+    try{await mutate(list=>{const t=list.find(x=>x.id===o.id);if(!t)return false;t.status=ns;t.updatedAt=Date.now();return list},`Bill ${o.billNo}: ${ns}`);renderTable();toast(`Bill ${o.billNo} marked ${ns}`)}
+    catch(e){toast(e.message);b.disabled=false}
+  });
+}
+
+function openForm(o){
+  const isNew=!o; o=o||{status:"Pending",issueDate:today()};
+  const scrim=document.createElement("div"); scrim.className="scrim";
+  scrim.innerHTML=`<form class="drawer" id="orderForm" autocomplete="off">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><h2>${isNew?"New order":"Edit order"}</h2><button type="button" class="btn small" id="closeF">Close</button></div>
+    <div id="formErr" class="err" hidden></div>
+    <div class="grid2">
+      <div class="field"><label for="fBill">Bill number</label><input id="fBill" class="mono" required value="${esc(o.billNo||"")}" ${isNew?"":"readonly"}></div>
+      <div class="field"><label for="fDate">Bill issue date</label><input id="fDate" type="date" required value="${esc(o.issueDate||"")}"></div>
+    </div>
+    <div class="field"><label for="fName">Client name</label><input id="fName" required value="${esc(o.name||"")}"></div>
+    <div class="grid2">
+      <div class="field"><label for="fPhone">Phone</label><input id="fPhone" type="tel" value="${esc(o.phone||"")}"></div>
+      <div class="field"><label for="fStatus">Status</label><select id="fStatus"><option ${o.status!=="Delivered"?"selected":""}>Pending</option><option ${o.status==="Delivered"?"selected":""}>Delivered</option></select></div>
+    </div>
+    <div class="field"><label for="fAddr">Address</label><input id="fAddr" value="${esc(o.address||"")}"></div>
+    <div class="field"><label for="fItem">Item</label><input id="fItem" required placeholder="e.g. Blue sapphire ring, 22K gold" value="${esc(o.item||"")}"></div>
+    <div class="field"><label for="fDesc">Item details</label><textarea id="fDesc" rows="3" placeholder="Stone, carat, metal, size, weight">${esc(o.details||"")}</textarea></div>
+    <div class="grid2">
+      <div class="field"><label for="fAmt">Total amount (Rs.)</label><input id="fAmt" type="number" min="0" step="0.01" class="mono" value="${esc(o.amount??"")}"></div>
+      <div class="field"><label for="fAdv">Advance paid (Rs.)</label><input id="fAdv" type="number" min="0" step="0.01" class="mono" value="${esc(o.advance??"")}"></div>
+    </div>
+    <div class="field"><label for="fDue">Delivery date</label><input id="fDue" type="date" value="${esc(o.dueDate||"")}"></div>
+    <div class="field"><label for="fNotes">Notes</label><textarea id="fNotes" rows="2">${esc(o.notes||"")}</textarea></div>
+    <div id="delZone"></div>
+    <div class="form-actions">
+      ${isNew?"":`<button type="button" class="btn danger" id="delBtn">Delete</button>`}
+      <button type="submit" class="btn primary" id="saveBtn">${isNew?"Save order":"Save changes"}</button>
+    </div>
+  </form>`;
+  document.body.appendChild(scrim);
+  const close=()=>scrim.remove();
+  scrim.addEventListener("click",e=>{if(e.target===scrim)close()});
+  $("#closeF").onclick=close;
+  const fe=$("#formErr"); const showErr=m=>{fe.textContent=m;fe.hidden=false};
+  if(!isNew) $("#delBtn").onclick=()=>{
+    $("#delZone").innerHTML=`<div class="confirm"><b>Delete bill ${esc(o.billNo)}?</b><span class="note">This removes the order for everyone.</span><div style="display:flex;gap:8px"><button type="button" class="btn danger" id="delYes">Yes, delete</button><button type="button" class="btn" id="delNo">Keep it</button></div></div>`;
+    $("#delNo").onclick=()=>$("#delZone").innerHTML="";
+    $("#delYes").onclick=async()=>{
+      $("#delYes").disabled=true;
+      try{await mutate(list=>list.filter(x=>x.id!==o.id),`Delete bill ${o.billNo}`);renderTable();toast(`Bill ${o.billNo} deleted`);close()}
+      catch(e){showErr(e.message);$("#delYes").disabled=false}
+    };
+  };
+  $("#orderForm").addEventListener("submit",async e=>{
+    e.preventDefault();
+    const bill=$("#fBill").value.trim();
+    if(!bill){showErr("Enter a bill number.");return}
+    const id=isNew?idFor(bill):o.id;
+    const num=v=>v===""?null:Number(v);
+    const data={id,billNo:bill,issueDate:$("#fDate").value,name:$("#fName").value.trim(),phone:$("#fPhone").value.trim(),
+      address:$("#fAddr").value.trim(),item:$("#fItem").value.trim(),details:$("#fDesc").value.trim(),
+      amount:num($("#fAmt").value),advance:num($("#fAdv").value),dueDate:$("#fDue").value,
+      status:$("#fStatus").value,notes:$("#fNotes").value.trim(),updatedAt:Date.now(),
+      createdAt:isNew?Date.now():(o.createdAt||Date.now())};
+    const sb=$("#saveBtn"); sb.disabled=true; sb.textContent="Saving…";
+    let dup=false;
+    try{
+      await mutate(list=>{
+        const i=list.findIndex(x=>x.id===id);
+        if(isNew&&i>=0){dup=true;return false}
+        if(i>=0) list[i]=data; else list.push(data);
+        return list;
+      },(isNew?"New bill ":"Update bill ")+bill);
+      if(dup){showErr(`Bill number ${bill} already exists. Use a different number or edit the existing order.`);sb.disabled=false;sb.textContent=isNew?"Save order":"Save changes";return}
+      renderTable();toast(isNew?`Bill ${bill} saved`:`Bill ${bill} updated`);close();
+    }catch(err){showErr(err.message);sb.disabled=false;sb.textContent=isNew?"Save order":"Save changes"}
+  });
+  $(isNew?"#fBill":"#fName").focus();
+}
+
+/* ---------- viewer (Look 1) ---------- */
+function renderViewer(){
+  app.innerHTML = headerHTML() + `
+  <main class="wrap"><div class="lookup">
+    <div><h2 style="font-size:28px">Check an order</h2><p class="sub">Enter the bill number to see the order details.</p></div>
+    <form id="lf"><input id="lb" class="mono" placeholder="Bill number" required><button class="btn primary" type="submit">Check order</button></form>
+    <div id="result"><div class="order-card"><div class="empty"><h3>Order details show here</h3><p>Client name, item, issue date and whether it is pending or delivered.</p></div></div></div>
+  </div></main>`;
+  $("#logout").onclick=logout;
+  $("#lf").addEventListener("submit",async e=>{
+    e.preventDefault();
+    const bill=$("#lb").value.trim(); const res=$("#result");
+    res.innerHTML=`<p class="note">Looking up bill ${esc(bill)}…</p>`;
+    try{
+      const {list}=await ghLoad(CONFIG,session.token);
+      const o=list.find(x=>x.id===idFor(bill));
+      if(!o){res.innerHTML=`<div class="order-card"><div class="empty"><h3>No order with bill number ${esc(bill)}</h3><p>Check the number on the bill and try again.</p></div></div>`;return}
+      res.innerHTML=orderCard(o);
+      $("#vInv").onclick=()=>downloadInvoice(o);
+    }catch(err){res.innerHTML=`<div class="err">${esc(err.message)}</div>`}
+  });
+  $("#lb").focus();
+}
+
+function orderCard(o){
+  const bal=(o.amount!=null&&o.amount!=="")?Number(o.amount)-Number(o.advance||0):null;
+  return `<div class="order-card">
+    <div class="head"><div><div class="label">Bill no</div><h2 class="mono">${esc(o.billNo)}</h2></div>${pill(o.status)}</div>
+    <dl class="kv">
+      <dt>Client name</dt><dd>${esc(o.name)}</dd>
+      <dt>Phone</dt><dd>${esc(o.phone||"—")}</dd>
+      <dt>Item</dt><dd>${esc(o.item)}</dd>
+      ${o.details?`<dt>Item details</dt><dd>${esc(o.details)}</dd>`:""}
+      <dt>Bill issue date</dt><dd class="mono">${esc(fmtDate(o.issueDate))}</dd>
+      <dt>Delivery date</dt><dd class="mono">${esc(fmtDate(o.dueDate))}</dd>
+      <dt>Total</dt><dd class="mono">${esc(money(o.amount))}</dd>
+      <dt>Advance paid</dt><dd class="mono">${esc(money(o.advance))}</dd>
+      <dt>Balance</dt><dd class="mono">${esc(bal==null?"—":money(bal))}</dd>
+      ${o.notes?`<dt>Notes</dt><dd>${esc(o.notes)}</dd>`:""}
+    </dl>
+    <div class="foot"><span class="note" style="margin-right:auto;align-self:center">View only</span><button class="btn gold" id="vInv">Download invoice (PDF)</button></div>
+  </div>`;
+}
+
+/* ---------- invoice PDF ---------- */
+function downloadInvoice(o){
+  if(!o) return;
+  if(!window.jspdf){toast("Invoice maker didn't load. Reload the page.");return}
+  const { jsPDF } = window.jspdf;
+  const d=new jsPDF({unit:"mm",format:"a4"});
+  const W=210, M=18;
+  const black=[13,13,13], gold=[184,146,58], ink=[17,17,17], mute=[107,103,94];
+  d.setFillColor(...black); d.rect(0,0,W,38,"F");
+  d.setTextColor(...gold); d.setFont("times","normal"); d.setFontSize(24);
+  d.text("Yasiru Gems & Jewellery",M,20);
+  d.setTextColor(245,239,224); d.setFont("helvetica","normal"); d.setFontSize(9.5);
+  d.text("Fine Ceylon gems and handcrafted jewellery",M,28);
+  d.setTextColor(255,255,255); d.setFont("helvetica","bold"); d.setFontSize(20); d.text("INVOICE",W-M,20,{align:"right"});
+  d.setFont("helvetica","normal"); d.setFontSize(10); d.setTextColor(...gold); d.text("Bill No: "+String(o.billNo),W-M,28,{align:"right"});
+  d.setDrawColor(...gold); d.setLineWidth(1.2); d.line(0,38,W,38);
+
+  let y=52;
+  d.setTextColor(...gold); d.setFontSize(8.5); d.setFont("helvetica","bold");
+  d.text("BILLED TO",M,y); d.text("INVOICE DETAILS",120,y);
+  d.setTextColor(...ink); d.setFontSize(12);
+  d.text(String(o.name||""),M,y+7);
+  d.setFont("helvetica","normal"); d.setFontSize(10);
+  let cy=y+13;
+  if(o.phone){d.text(String(o.phone),M,cy);cy+=5.5}
+  if(o.address){d.splitTextToSize(String(o.address),90).forEach(l=>{d.text(l,M,cy);cy+=5.5})}
+  [["Issue date",fmtDate(o.issueDate)],["Delivery date",fmtDate(o.dueDate)],["Status",o.status==="Delivered"?"Delivered":"Pending"]]
+    .forEach((r,i)=>{d.setTextColor(...mute);d.text(r[0],120,y+7+i*6);d.setTextColor(...ink);d.text(String(r[1]),W-M,y+7+i*6,{align:"right"})});
+
+  y=Math.max(cy,y+26)+8;
+  d.setFillColor(246,244,238); d.rect(M,y,W-2*M,9,"F");
+  d.setFont("helvetica","bold"); d.setFontSize(9); d.setTextColor(143,110,36);
+  d.text("ITEM",M+3,y+6); d.text("AMOUNT (Rs.)",W-M-3,y+6,{align:"right"});
+  y+=16;
+  d.setTextColor(...ink); d.setFontSize(11);
+  const itemLines=d.splitTextToSize(String(o.item||""),120);
+  itemLines.forEach((l,i)=>d.text(l,M+3,y+i*5.5));
+  const amtTxt=(o.amount!=null&&o.amount!=="")?Number(o.amount).toLocaleString("en-LK",{minimumFractionDigits:2}):"-";
+  d.text(amtTxt,W-M-3,y,{align:"right"});
+  y+=itemLines.length*5.5;
+  if(o.details){d.setFont("helvetica","normal");d.setFontSize(9.5);d.setTextColor(...mute);
+    d.splitTextToSize(String(o.details),120).forEach(l=>{d.text(l,M+3,y+1);y+=5})}
+  y+=6; d.setDrawColor(228,223,210); d.setLineWidth(.3); d.line(M,y,W-M,y);
+
+  y+=9;
+  const tot=Number(o.amount||0), adv=Number(o.advance||0);
+  d.setFontSize(10); d.setFont("helvetica","normal");
+  [["Total",tot],["Advance paid",adv]].forEach(r=>{d.setTextColor(...mute);d.text(r[0],130,y);d.setTextColor(...ink);d.text("Rs. "+r[1].toLocaleString("en-LK",{minimumFractionDigits:2}),W-M-3,y,{align:"right"});y+=7});
+  d.setFillColor(...black); d.rect(124,y-4.5,W-M-124,10,"F");
+  d.setTextColor(...gold); d.setFont("helvetica","bold");
+  d.text("Balance due",130,y+2); d.text("Rs. "+(tot-adv).toLocaleString("en-LK",{minimumFractionDigits:2}),W-M-3,y+2,{align:"right"});
+
+  if(o.notes){y+=20;d.setTextColor(...gold);d.setFontSize(8.5);d.text("NOTES",M,y);
+    d.setFont("helvetica","normal");d.setFontSize(10);d.setTextColor(...ink);
+    d.splitTextToSize(String(o.notes),W-2*M).forEach((l,i)=>d.text(l,M,y+6+i*5.5))}
+
+  /* contact band at the foot of the page */
+  const link=v=>/^https?:\/\//i.test(v)?v:"https://"+v;
+  const phones=(SHOP.phones||[]).filter(Boolean).join("  /  ");
+  const info=[
+    ["ADDRESS",SHOP.address],["PHONE",phones],["WHATSAPP",SHOP.whatsapp],["EMAIL",SHOP.email],
+    ["WEBSITE",SHOP.website,true],["FACEBOOK",SHOP.facebook,true],["FB GROUP",SHOP.fbGroup,true]
+  ].filter(r=>r[1]&&String(r[1]).trim());
+  const rowsN=Math.ceil(info.length/2);
+  const bandH=info.length?16+rowsN*9:14;
+  const bandTop=297-bandH;
+  d.setFillColor(...black); d.rect(0,bandTop,W,bandH,"F");
+  d.setDrawColor(...gold); d.setLineWidth(1.2); d.line(0,bandTop,W,bandTop);
+  d.setFont("times","normal"); d.setFontSize(11); d.setTextColor(...gold);
+  d.text("Thank you for choosing Yasiru Gems & Jewellery",W/2,bandTop+8,{align:"center"});
+  info.forEach((r,i)=>{
+    const col=i%2, row=Math.floor(i/2);
+    const x=col?W/2+4:M, yy=bandTop+16+row*9;
+    d.setFont("helvetica","bold"); d.setFontSize(7); d.setTextColor(...gold);
+    d.text(r[0],x,yy);
+    d.setFont("helvetica","normal"); d.setFontSize(9); d.setTextColor(245,239,224);
+    const shown=r[2]?String(r[1]).trim().replace(/^https?:\/\//i,"").replace(/^www\./i,""):String(r[1]);
+    const val=d.splitTextToSize(shown,W/2-M-6)[0];
+    if(r[2]) d.textWithLink(val,x,yy+4.2,{url:link(String(r[1]).trim())}); else d.text(val,x,yy+4.2);
+  });
+
+  const sy=bandTop-12;
+  d.setTextColor(...mute); d.setFont("helvetica","normal"); d.setFontSize(9);
+  d.setDrawColor(...ink); d.setLineWidth(.3);
+  d.line(M,sy,M+55,sy); d.text("Authorised signature",M,sy+5);
+  d.line(W-M-55,sy,W-M,sy); d.text("Customer signature",W-M,sy+5,{align:"right"});
+
+  d.save("Invoice-"+String(o.billNo).replace(/[^A-Za-z0-9_-]/g,"_")+".pdf");
+  toast("Invoice downloaded");
+}
+</script>
+</body>
+</html>
